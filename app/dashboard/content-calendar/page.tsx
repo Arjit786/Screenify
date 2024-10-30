@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ChevronLeft, ChevronRight, PlusCircle, Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { ChevronLeft, ChevronRight, PlusCircle, Search, Pencil, Trash2, AlertCircle } from "lucide-react"
 import { Sidebar } from "@/components/ui/sidebar"
 
 // Mock data for scheduled posts
@@ -24,6 +25,14 @@ const initialScheduledPosts = [
     { id: '5', date: '2024-10-25', time: '10:00', content: 'Throwback to last year\'s company retreat. Great memories! #TBT #CompanyCulture', type: 'image' },
 ]
 
+type Post = {
+    id: string
+    date: string
+    time: string
+    content: string
+    type: string
+}
+
 export default function ContentCalendar() {
     const [currentMonth, setCurrentMonth] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -31,6 +40,11 @@ export default function ContentCalendar() {
     const [searchTerm, setSearchTerm] = useState('')
     const [scheduledPosts, setScheduledPosts] = useState(initialScheduledPosts)
     const [newPost, setNewPost] = useState({ type: 'text', content: '', date: '', time: '' })
+    const [editingPost, setEditingPost] = useState<Post | null>(null)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [postToDelete, setPostToDelete] = useState<Post | null>(null)
+    const { toast } = useToast()
 
     const filteredPosts = scheduledPosts.filter(post => {
         const matchesFilter = filter === 'all' || post.type === filter
@@ -54,19 +68,104 @@ export default function ContentCalendar() {
         const newScheduledPost = { ...newPost, id }
         setScheduledPosts([...scheduledPosts, newScheduledPost])
         setNewPost({ type: 'text', content: '', date: '', time: '' })
+        toast({
+            title: "Post Scheduled",
+            description: "Your post has been scheduled successfully.",
+            duration: 3000,
+        })
     }
 
+    const handleEditPost = (post: Post) => {
+        setEditingPost(post)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleUpdatePost = () => {
+        if (!editingPost) return
+
+        setScheduledPosts(posts =>
+            posts.map(post =>
+                post.id === editingPost.id ? editingPost : post
+            )
+        )
+        setEditingPost(null)
+        setIsEditDialogOpen(false)
+        toast({
+            title: "Post Updated",
+            description: "Your post has been updated successfully.",
+            duration: 3000,
+        })
+    }
+
+    const handleDeletePost = (post: Post) => {
+        setPostToDelete(post)
+        setIsDeleteDialogOpen(true)
+    }
+
+    const confirmDelete = () => {
+        if (!postToDelete) return
+
+        setScheduledPosts(posts =>
+            posts.filter(post => post.id !== postToDelete.id)
+        )
+        setPostToDelete(null)
+        setIsDeleteDialogOpen(false)
+        toast({
+            title: "Post Deleted",
+            description: "Your post has been deleted successfully.",
+            duration: 3000,
+        })
+    }
+
+    const PostCard = ({ post }: { post: Post }) => (
+        <Card className="group relative">
+            <CardContent className="p-2">
+                <div className="flex justify-between items-center mb-1">
+                    <Badge>{post.type}</Badge>
+                    <span className="text-sm text-gray-500">{post.time}</span>
+                </div>
+                <p className="text-sm">{post.content}</p>
+
+                {/* Hover actions */}
+                <div className="absolute top-2 right-2 hidden group-hover:flex space-x-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditPost(post)
+                        }}
+                    >
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-500 hover:text-red-600"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeletePost(post)
+                        }}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
+
     return (
-        <div className="flex h-screen overflow-hidden bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50">
             <Sidebar />
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-hidden">
-                <div className="h-full flex flex-col">
-                    <header className="bg-blue-700 text-white px-4 py-3 flex justify-between items-center">
-                        <h1 className="text-2xl font-bold">Content Calendar</h1>
-                    </header>
-                    <main className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <header className="flex-none bg-blue-700 text-white px-4 py-3 flex justify-between items-center">
+                    <h1 className="text-2xl font-bold">Content Calendar</h1>
+                </header>
+
+                <main className="flex-1 overflow-y-auto">
+                    <div className="container mx-auto p-4 max-w-7xl">
                         <div className="mb-4 flex justify-between items-center">
                             <div className="flex space-x-2">
                                 <Select value={filter} onValueChange={setFilter}>
@@ -106,7 +205,10 @@ export default function ContentCalendar() {
                                             <Label htmlFor="post-type" className="text-right">
                                                 Type
                                             </Label>
-                                            <Select value={newPost.type} onValueChange={(value) => setNewPost({ ...newPost, type: value })}>
+                                            <Select
+                                                value={newPost.type}
+                                                onValueChange={(value) => setNewPost({ ...newPost, type: value })}
+                                            >
                                                 <SelectTrigger className="w-[180px]">
                                                     <SelectValue placeholder="Select post type" />
                                                 </SelectTrigger>
@@ -154,11 +256,14 @@ export default function ContentCalendar() {
                                         </div>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="submit" onClick={handleNewPostSubmit}>Schedule Post</Button>
+                                        <Button type="submit" onClick={handleNewPostSubmit}>
+                                            Schedule Post
+                                        </Button>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
                         </div>
+
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">
@@ -212,25 +317,22 @@ export default function ContentCalendar() {
                                                                 </Badge>
                                                             )}
                                                         </div>
+
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-80">
                                                     <div className="space-y-2">
                                                         <h3 className="font-semibold">{format(day, 'MMMM d, yyyy')}</h3>
                                                         {postsForDay.length > 0 ? (
-                                                            postsForDay.map((post) => (
-                                                                <Card key={post.id}>
-                                                                    <CardContent className="p-2">
-                                                                        <div className="flex justify-between items-center mb-1">
-                                                                            <Badge>{post.type}</Badge>
-                                                                            <span className="text-sm text-gray-500">{post.time}</span>
-                                                                        </div>
-                                                                        <p className="text-sm">{post.content}</p>
-                                                                    </CardContent>
-                                                                </Card>
-                                                            ))
+                                                            <div className="space-y-2">
+                                                                {postsForDay.map((post) => (
+                                                                    <PostCard key={post.id} post={post} />
+                                                                ))}
+                                                            </div>
                                                         ) : (
-                                                            <p className="text-sm text-gray-500">No posts scheduled for this day.</p>
+                                                            <p className="text-sm text-gray-500">
+                                                                No posts scheduled for this day.
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </PopoverContent>
@@ -240,9 +342,115 @@ export default function ContentCalendar() {
                                 </div>
                             </CardContent>
                         </Card>
-                    </main>
-                </div>
+                    </div>
+                </main>
             </div>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Post</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-type" className="text-right">
+                                Type
+                            </Label>
+                            <Select
+                                value={editingPost?.type}
+                                onValueChange={(value) =>
+                                    setEditingPost(prev => prev ? { ...prev, type: value } : null)
+                                }
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select post type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="text">Text</SelectItem>
+                                    <SelectItem value="image">Image</SelectItem>
+                                    <SelectItem value="link">Link</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-content" className="text-right">
+                                Content
+                            </Label>
+                            <Textarea
+                                id="edit-content"
+                                className="col-span-3"
+                                value={editingPost?.content}
+                                onChange={(e) =>
+                                    setEditingPost(prev => prev ? { ...prev, content: e.target.value } : null)
+                                }
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-date" className="text-right">
+                                Date
+                            </Label>
+                            <Input
+                                id="edit-date"
+                                type="date"
+                                className="col-span-3"
+                                value={editingPost?.date}
+                                onChange={(e) =>
+                                    setEditingPost(prev => prev ? { ...prev, date: e.target.value } : null)
+                                }
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-time" className="text-right">
+                                Time
+                            </Label>
+                            <Input
+                                id="edit-time"
+                                type="time"
+                                className="col-span-3"
+                                value={editingPost?.time}
+                                onChange={(e) =>
+                                    setEditingPost(prev => prev ? { ...prev, time: e.target.value } : null)
+                                }
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleUpdatePost}>
+                            Update Post
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Post</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this post? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center gap-2 py-3">
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                        <p className="text-sm text-gray-500">
+                            This will permanently delete the scheduled post.
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDelete}>
+                            Delete Post
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { BarChart, CalendarIcon, PlusCircle, Zap, MessageSquare } from "lucide-react"
+import { BarChart, CalendarIcon, PlusCircle, Zap, MessageSquare, Settings2Icon, SettingsIcon, BookOpen, Brain, Lightbulb, Heart } from "lucide-react"
 import Link from "next/link"
 
 export function Sidebar() {
@@ -51,8 +51,17 @@ export function Sidebar() {
                             className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
                             asChild>
                             <Link href="/dashboard/idea-generator">
-                                <PlusCircle className="mr-2 h-4 w-4" />
+                                <Lightbulb className="mr-2 h-4 w-4" />
                                 Idea Generator
+                            </Link>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
+                            asChild>
+                            <Link href="/dashboard/content-inspiration">
+                                <Heart className="mr-2 h-4 w-4" />
+                                Content Inspiration
                             </Link>
                         </Button>
                         <Button
@@ -69,17 +78,26 @@ export function Sidebar() {
                             className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
                             asChild>
                             <Link href="/dashboard/content-to-carousel">
-                                <PlusCircle className="mr-2 h-4 w-4" />
+                                <BookOpen className="mr-2 h-4 w-4" />
                                 Content-to-Carousel
                             </Link>
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full justify-start text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
                             asChild>
                             <Link href="/dashboard/content-calendar">
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 Content Calendar
+                            </Link>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
+                            asChild>
+                            <Link href="/dashboard/engagment-automation">
+                                <SettingsIcon className="mr-2 h-4 w-4" />
+                                Engagment
                             </Link>
                         </Button>
                     </div>
