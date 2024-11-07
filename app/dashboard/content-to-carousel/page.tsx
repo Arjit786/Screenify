@@ -94,6 +94,14 @@ const designerTemplates = [
         textColor: "text-gray-900",
         accent: "border-cyan-200",
         headerStyle: "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+    },
+    {
+        name: "Elegant Black",
+        class: "font-sans",
+        background: "bg-black",
+        textColor: "text-white",
+        accent: "border-gray-800",
+        headerStyle: "bg-gray-900 text-white border-b border-gray-800"
     }
 ]
 

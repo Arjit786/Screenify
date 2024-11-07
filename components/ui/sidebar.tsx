@@ -23,7 +23,7 @@ export function Sidebar() {
                             <div className="flex items-center space-x-4">
                                 <Avatar className="w-12 h-12 border-2 border-white">
                                     <AvatarImage src="/placeholder.svg?height=48&width=48" alt="User" />
-                                    <AvatarFallback>JD</AvatarFallback>
+                                    <AvatarFallback>LS</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <h3 className="font-semibold text-lg">Lakshay Sharma</h3>
@@ -95,6 +95,15 @@ export function Sidebar() {
                             variant="outline"
                             className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
                             asChild>
+                            <Link href="/dashboard/drafts">
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                Drafts
+                            </Link>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-start text-primary hover:text-primary hover:bg-primary/10"
+                            asChild>
                             <Link href="/dashboard/engagment-automation">
                                 <SettingsIcon className="mr-2 h-4 w-4" />
                                 Engagment
@@ -105,21 +114,14 @@ export function Sidebar() {
                 <div className="p-4">
                     <Card className="bg-gray-100 border-gray-200">
                         <CardContent className="p-4">
-                            <h3 className="font-bold text-lg mb-2 text-gray-800">Account Usage</h3>
+                            <h3 className="font-bold text-lg mb-2 text-gray-800">Keywords Usage</h3>
                             <div className="space-y-2">
                                 <div>
                                     <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                        <span>Posts</span>
-                                        <span>3/5</span>
+                                        <span>Free Keywords</span>
+                                        <span>3,500/5,000</span>
                                     </div>
-                                    <Progress value={60} className="h-2" />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                        <span>Scheduled</span>
-                                        <span>2/10</span>
-                                    </div>
-                                    <Progress value={20} className="h-2" />
+                                    <Progress value={70} className="h-2" />
                                 </div>
                             </div>
                         </CardContent>
@@ -130,7 +132,7 @@ export function Sidebar() {
                         <CardContent className="p-4">
                             <Zap className="h-8 w-8 mb-2" />
                             <h3 className="font-bold text-lg mb-2">Upgrade to Pro</h3>
-                            <p className="text-sm mb-4 opacity-90">Get unlimited posts, advanced analytics, and more!</p>
+                            <p className="text-sm mb-4 opacity-90">Get unlimited keywords, advanced analytics, and more!</p>
                             <Button variant="secondary" className="w-full" asChild>
                                 <Link href="/dashboard/subscription">
                                     Upgrade Now

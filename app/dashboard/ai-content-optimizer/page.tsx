@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,10 +18,13 @@ import {
     Share2,
     ArrowUpRight,
     ImagePlus,
-    X
+    X,
+    Smile
 } from "lucide-react"
 import { Sidebar } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Cropper from 'react-easy-crop'
+import { Point, Area } from 'react-easy-crop/types'
 
 const samplePost = `Just finished an exciting project using AI to optimize supply chain logistics. We've seen a 30% reduction in delivery times and a 20% decrease in costs. #AI #SupplyChain #Innovation
 
@@ -30,17 +33,28 @@ What are your thoughts on the role of AI in improving business operations? Have 
 export default function AIContentOptimizer() {
     const [post, setPost] = useState(samplePost)
     const [optimizedPost, setOptimizedPost] = useState("")
+    const [previewPost, setPreviewPost] = useState("")
     const [tone, setTone] = useState("professional")
     const [length, setLength] = useState(50)
     const [includeHashtags, setIncludeHashtags] = useState(true)
     const [includeCTA, setIncludeCTA] = useState(true)
+    const [includeEmoticons, setIncludeEmoticons] = useState(false)
     const [isOptimizing, setIsOptimizing] = useState(false)
     const [image, setImage] = useState<string | null>(null)
+    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
+    const [zoom, setZoom] = useState(1)
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+    const [isCropping, setIsCropping] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
     const [engagement, setEngagement] = useState({
         likes: 0,
         comments: 0,
         shares: 0
     })
+
+    useEffect(() => {
+        setPreviewPost(optimizedPost || post)
+    }, [optimizedPost, post])
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -48,36 +62,50 @@ export default function AIContentOptimizer() {
             const reader = new FileReader()
             reader.onloadend = () => {
                 setImage(reader.result as string)
+                setIsCropping(true)
             }
             reader.readAsDataURL(file)
         }
     }
 
+    const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+        setCroppedAreaPixels(croppedAreaPixels)
+    }, [])
+
+    const handleCropConfirm = useCallback(async () => {
+        if (image && croppedAreaPixels) {
+            const croppedImage = await getCroppedImg(image, croppedAreaPixels)
+            setImage(croppedImage)
+            setIsCropping(false)
+        }
+    }, [image, croppedAreaPixels])
+
     const handleOptimize = async () => {
         setIsOptimizing(true)
         await new Promise(resolve => setTimeout(resolve, 2000))
-        const optimized = `I'm thrilled to share the results of our recent AI-powered supply chain optimization project! 🚀 We've achieved remarkable improvements:
+        const optimized = `I'm thrilled to share the results of our recent AI-powered supply chain optimization project! ${includeEmoticons ? '🚀' : ''} We've achieved remarkable improvements:
 
 ✅ 30% reduction in delivery times
 ✅ 20% decrease in overall costs
 
 These results highlight the transformative power of AI in streamlining business operations. 
 
-🔍 Key takeaways:
+${includeEmoticons ? '🔍' : ''} Key takeaways:
 1. AI can significantly enhance efficiency in complex systems
 2. Data-driven decision making leads to tangible cost savings
 3. Improved delivery times translate to better customer satisfaction
 
 I'm curious to hear from my network:
-💡 How are you leveraging AI in your industry?
-💡 What challenges do you foresee in implementing AI solutions?
-💡 What other areas of business do you think could benefit from AI optimization?
+${includeEmoticons ? '💡' : ''} How are you leveraging AI in your industry?
+${includeEmoticons ? '💡' : ''} What challenges do you foresee in implementing AI solutions?
+${includeEmoticons ? '💡' : ''} What other areas of business do you think could benefit from AI optimization?
 
 Let's discuss in the comments! Your insights could spark the next big innovation.
 
-#ArtificialIntelligence #SupplyChainOptimization #BusinessInnovation #DataDrivenDecisions #FutureOfBusiness`
+${includeHashtags ? '#ArtificialIntelligence #SupplyChainOptimization #BusinessInnovation #DataDrivenDecisions #FutureOfBusiness' : ''}`
 
         setOptimizedPost(optimized)
+        setPreviewPost(optimized)
         setIsOptimizing(false)
     }
 
@@ -159,6 +187,27 @@ Let's discuss in the comments! Your insights could spark the next big innovation
                                                     </Label>
                                                 </div>
                                             </div>
+                                            {isCropping && image && (
+                                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                                                    <div className="bg-white p-4 rounded-lg w-full max-w-md">
+                                                        <div className="relative h-64 mb-4">
+                                                            <Cropper
+                                                                image={image}
+                                                                crop={crop}
+                                                                zoom={zoom}
+                                                                aspect={16 / 9}
+                                                                onCropChange={setCrop}
+                                                                onCropComplete={onCropComplete}
+                                                                onZoomChange={setZoom}
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <Button onClick={() => setIsCropping(false)}>Cancel</Button>
+                                                            <Button onClick={handleCropConfirm}>Confirm Crop</Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div className="grid gap-4 md:grid-cols-2">
                                                 <div>
                                                     <Label htmlFor="tone">Tone</Label>
@@ -205,6 +254,14 @@ Let's discuss in the comments! Your insights could spark the next big innovation
                                                     />
                                                     <Label htmlFor="include-cta">Include Call-to-Action</Label>
                                                 </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Switch
+                                                        id="include-emoticons"
+                                                        checked={includeEmoticons}
+                                                        onCheckedChange={setIncludeEmoticons}
+                                                    />
+                                                    <Label htmlFor="include-emoticons">Include Emoticons</Label>
+                                                </div>
                                             </div>
                                             <Button onClick={handleOptimize} disabled={isOptimizing} className="w-full">
                                                 {isOptimizing ? (
@@ -228,7 +285,16 @@ Let's discuss in the comments! Your insights could spark the next big innovation
                             <div className="space-y-4">
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>LinkedIn Preview</CardTitle>
+                                        <CardTitle className="flex justify-between items-center">
+                                            LinkedIn Preview
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setIsEditing(!isEditing)}
+                                            >
+                                                {isEditing ? 'Save' : 'Edit'}
+                                            </Button>
+                                        </CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-4">
@@ -244,11 +310,20 @@ Let's discuss in the comments! Your insights could spark the next big innovation
                                             </div>
                                             <div className="space-y-4 pt-2">
                                                 <div className="prose prose-sm max-w-none">
-                                                    <p className="whitespace-pre-wrap">{optimizedPost || post}</p>
+                                                    {isEditing ? (
+                                                        <Textarea
+                                                            value={previewPost}
+                                                            onChange={(e) => setPreviewPost(e.target.value)}
+                                                            className="w-full h-64"
+                                                        />
+                                                    ) : (
+                                                        <p className="whitespace-pre-wrap">{previewPost}</p>
+                                                    )}
                                                 </div>
                                                 {image && (
                                                     <div className="relative w-full h-64 rounded-lg overflow-hidden">
                                                         <img
+
                                                             src={image}
                                                             alt="Post image"
                                                             className="w-full h-full object-cover"
@@ -280,6 +355,7 @@ Let's discuss in the comments! Your insights could spark the next big innovation
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div className="flex justify-end space-x-2 mt-4">
                                             <Button variant="outline">
                                                 <ArrowUpRight className="mr-2 h-4 w-4" />
@@ -299,4 +375,44 @@ Let's discuss in the comments! Your insights could spark the next big innovation
             </div>
         </div>
     )
+}
+
+// Helper function to crop the image
+const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+        const image = new Image()
+        image.addEventListener('load', () => resolve(image))
+        image.addEventListener('error', (error) => reject(error))
+        image.setAttribute('crossOrigin', 'anonymous')
+        image.src = url
+    })
+
+const getCroppedImg = async (
+    imageSrc: string,
+    pixelCrop: Area
+): Promise<string> => {
+    const image = await createImage(imageSrc)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) {
+        return imageSrc
+    }
+
+    canvas.width = pixelCrop.width
+    canvas.height = pixelCrop.height
+
+    ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+    )
+
+    return canvas.toDataURL('image/jpeg')
 }

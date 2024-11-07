@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+  images: {
+    domains: ['hebbkx1anhila5yf.public.blob.vercel-storage.com'],
+  },
+  // Remove swcMinify as it's no longer needed in Next.js 13+
 }
 
 module.exports = nextConfig

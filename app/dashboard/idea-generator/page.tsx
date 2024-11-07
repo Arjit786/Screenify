@@ -89,7 +89,7 @@ export default function ContentIdeaGenerator() {
             <div className="flex-1 overflow-hidden">
                 <div className="h-full flex flex-col">
                     <header className="bg-blue-700 text-white px-4 py-3">
-                        <h1 className="text-2xl font-bold">Content Idea Generator</h1>
+                        <h1 className="text-2xl font-bold">AI Idea Generator</h1>
                     </header>
                     <main className="flex-1 overflow-y-auto p-4">
                         <div className="grid gap-6 md:grid-cols-2">
